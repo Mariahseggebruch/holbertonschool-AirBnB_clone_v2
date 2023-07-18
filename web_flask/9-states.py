@@ -1,38 +1,36 @@
 #!/usr/bin/python3
-""" Start a Flask web application """
-
-from flask import Flask
-from flask import render_template
-from models import storage
+"""
+Write a script that starts a Flask web application:
+"""
+from flask import Flask, render_template
+from models import storage, State
 
 app = Flask(__name__)
 
 
-def StartFlask():
-    """ Start a Flask web application """
-    app.run(host='0.0.0.0', port=5000)
-
-
-@app.route('/states/', strict_slashes=False)
-def states_list():
-    """ Display List of States """
-    states = storage.all('State')
-    return render_template('9-states.html', states=states.values(), id=None)
-
-
-@app.route('/states/<id>', strict_slashes=False)
-def states_id(id):
-    """ Display List of States """
-    states = storage.all('State')
-    state = states.get('State.' + id)
-    return render_template('9-states.html', states=state, my_id=id)
-
-
 @app.teardown_appcontext
-def teardown_db(exception):
-    """ Remove the current SQLAlchemy Session """
+def teardown_appcontext(exception):
+    """tears down session"""
     storage.close()
 
 
-if __name__ == "__main__":
-    StartFlask()
+@app.route('/states_list', strict_slashes=False)
+def states_list():
+    """displays list of states"""
+    states = storage.all("State")
+    return render_template('7-states_list.html', states=states.values())
+
+
+@app.route('/states/<id>', strict_slashes=False)
+def states_id():
+    """displays state with id"""
+    state = storage.get(State, id)
+    if state:
+        cities = sorted(state.cities, key=lambda city: city.name)
+        return render_template('9-states.html', state=state, cities=cities)
+    else:
+        return render_template('9-states.html', not_found=True)
+
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
